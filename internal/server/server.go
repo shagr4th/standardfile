@@ -19,6 +19,7 @@ type Controller struct {
 	Version         string
 	Database        database.Client
 	NoRegistration  bool
+	Subscription    string
 	ShowRealVersion bool
 	// JWT params
 	SigningKey []byte
@@ -108,6 +109,13 @@ func EchoEngine(ctrl Controller) *echo.Echo {
 	// TODO: PUT    /v1/users/:id/settings
 	// TODO: DELETE /v1/users/:id/settings/:param
 
+	sub := &sub{
+		subscription: ctrl.Subscription,
+	}
+	router.GET("/v2/subscriptions", sub.Subscriptions)
+	v1restricted.GET("/users/:id/subscription", sub.Subscription, sub.DecorateJsonResponse)
+	v1restricted.GET("/users/:id/features", sub.Features, sub.DecorateJsonResponse)
+
 	//
 	// session handlers
 	//
@@ -135,7 +143,7 @@ func EchoEngine(ctrl Controller) *echo.Echo {
 	restricted.POST("/items/backup", item.Backup)
 	restricted.DELETE("/items", item.Delete)
 
-	v1restricted.POST("/items", item.Sync)
+	v1restricted.POST("/items", item.Sync, sub.DecorateJsonResponse) // middleware required for subscription support
 
 	v2 := router.Group("/v2")
 	v2.POST("/login", auth.LoginPKCE)

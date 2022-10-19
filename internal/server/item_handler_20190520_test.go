@@ -151,4 +151,12 @@ func TestRequestItemsSync20190520(t *testing.T) {
 		assert.Empty(t, v.Saved)
 		assert.Empty(t, v.Conflicts)
 	})
+
+	r.POST("/v1/items").SetHeader(header).SetJSON(params).Run(engine, func(r gofight.HTTPResponse, rq gofight.HTTPRequest) {
+		assert.Equal(t, http.StatusOK, r.Code)
+
+		var meta interface{}
+		err := json.Unmarshal(r.Body.Bytes(), &meta)
+		assert.NoError(t, err)
+	})
 }
